@@ -174,7 +174,6 @@ def display(board: Board, win_line: Optional[List[Move]] = None,
     hl_last = {last_move} if last_move else set()
     clear_screen()
     print("\n" + "="*20 + " Current Board " + "="*20)
-    # print("    " + "".join(f"{x:^{CELL_WIDTH}}" for x in range(BOARD_SIZE)))
     print("    " + "".join(f"x={x}".center(CELL_WIDTH) for x in range(BOARD_SIZE)))
     for z in reversed(range(BOARD_SIZE)):
         print(f"\nLayer {z} (z={z}):")
@@ -259,18 +258,17 @@ def main():
         if game_over:
             resp = input("Game over. Enter 'u' to undo last move or any key to exit: ").strip().lower()
             if resp in ('u','undo') and history:
-                winning_line = None  # clear winning line when undoing after game over
-                # undo one or two moves as needed
+                # Undo last move after game over
                 prev_player, prev_move = history.pop()
                 board.remove_piece(*prev_move)
-                if ai_player is not None and prev_player==ai_player and history:
-                    prev_player2, prev_move2 = history.pop()
-                    board.remove_piece(*prev_move2)
-                    current = prev_player2
-                    last_move = history[-1][1] if history else None
-                else:
+                current = prev_player
+                # If it's now AI's turn next, undo one more move
+                if ai_player is not None and current == ai_player and history:
+                    prev_player, prev_move = history.pop()
+                    board.remove_piece(*prev_move)
                     current = prev_player
-                    last_move = history[-1][1] if history else None
+                last_move = history[-1][1] if history else None
+                winning_line = None
                 game_over = False
                 continue
             else:
@@ -291,18 +289,18 @@ def main():
         else:
             res = get_move(board, args.gravity)
             if res is None:
-                winning_line = None
                 if history:
+                    # Undo last move
                     prev_player, prev_move = history.pop()
                     board.remove_piece(*prev_move)
-                    if ai_player and prev_player==ai_player and history:
-                        prev_player2, prev_move2 = history.pop()
-                        board.remove_piece(*prev_move2)
-                        current = prev_player2
-                        last_move = history[-1][1] if history else None
-                    else:
+                    current = prev_player
+                    # If it's now AI's turn next, undo one more move
+                    if ai_player is not None and current == ai_player and history:
+                        prev_player, prev_move = history.pop()
+                        board.remove_piece(*prev_move)
                         current = prev_player
-                        last_move = history[-1][1] if history else None
+                    last_move = history[-1][1] if history else None
+                    winning_line = None
                     continue
                 else:
                     print("Nothing to undo.")
